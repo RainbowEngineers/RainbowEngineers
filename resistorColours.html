@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RainbowEngineers.org - Resistor Color Code Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            transition: background 0.3s ease;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        input, select, button {
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+            width: 85%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .resistor-body {
+            width: 300px;
+            height: 80px;
+            margin: 20px auto;
+            background-color: #a89f91;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .band {
+            width: 30px;
+            height: 50px;
+            border-radius: 5px;
+            transition: background-color 1s ease-in-out;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .dark-mode {
+            background-color: #222;
+            color: white;
+        }
+        .dark-mode .container {
+            background: #333;
+            color: white;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+        #motivationalMessage {
+            font-size: 24px;
+            color: #ff6600;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Home Page Section -->
+    <div id="homePage">
+        <h1>Welcome to <span style="color: #ff6600;">RainbowEngineers.org</span></h1>
+        <h2>Resistor Color Code Calculator</h2>
+
+        <div id="motivationalMessage">"Innovation is the key to progress!"</div>
+
+        <div class="container">
+            <button onclick="showCalculator()">Start Resistor Color Code Generator</button>
+        </div>
+    </div>
+
+    <!-- Resistor Color Code Generator Section -->
+    <div id="colorCodePage" style="display:none;">
+        <div class="container">
+            <label for="resistorType">Select Resistor Type:</label>
+            <select id="resistorType" onchange="generateColorCode()">
+                <option value="4">4-Band</option>
+                <option value="5">5-Band</option>
+                <option value="6">6-Band</option>
+            </select>
+
+            <input type="text" id="userInput" placeholder="Enter resistor value (e.g. 123)" oninput="generateColorCode()">
+            
+            <label for="tolerance">Select Tolerance:</label>
+            <select id="tolerance" onchange="generateColorCode()">
+                <option value="Gold">Gold (±5%)</option>
+                <option value="Silver">Silver (±10%)</option>
+                <option value="Brown">Brown (±1%)</option>
+                <option value="Red">Red (±2%)</option>
+            </select>
+
+            <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+
+            <!-- Resistor Image Representation -->
+            <div class="resistor-body" id="resistor">
+                <div class="band" id="band1"></div>
+                <div class="band" id="band2"></div>
+                <div class="band" id="band3"></div>
+                <div class="band" id="band4"></div>
+            </div>
+
+            <p id="result"></p>
+
+            <button onclick="saveResult()">Save Result</button>
+            <button onclick="downloadImage()">Download as Image</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>Created by Makofane V, Shikoane EL, Modiselle PM, Mahlangu N, Mogaladi S, Maitisa TT, Mabogwane T, Hadebe SA, Ramahlo NB, Chitha VA - <span style="color: #ff6600;">RainbowEngineers.org</span></p>
+    </footer>
+
+    <script>
+        // Color and multiplier map
+        const colorMap = ["Black", "Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet", "Gray", "White"];
+        const multiplierMap = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000];
+        const toleranceMap = { "Brown": 1, "Red": 2, "Green": 0.5, "Blue": 0.25, "Violet": 0.1, "Gray": 0.05, "Gold": 5, "Silver": 10 };
+
+        let motivationalMessages = [
+            "Innovation is the key to progress!",
+            "Create, innovate, and inspire!",
+            "The future belongs to the curious!",
+            "Every challenge is an opportunity!",
+            "Success is a journey, not a destination!"
+        ];
+        let currentMessageIndex = 0;
+
+        function changeMotivationalMessage() {
+            currentMessageIndex = (currentMessageIndex + 1) % motivationalMessages.length;
+            document.getElementById('motivationalMessage').innerHTML = motivationalMessages[currentMessageIndex];
+        }
+
+        setInterval(changeMotivationalMessage, 5000); // Change message every 5 seconds
+
+        function showCalculator() {
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('colorCodePage').style.display = 'block';
+        }
+
+        function validateInput(input) {
+            return input.replace(/[^0-9]/g, '');
+        }
+
+        function generateColorCode() {
+            let input = document.getElementById("userInput").value;
+            let resistorType = parseInt(document.getElementById("resistorType").value);
+            let tolerance = document.getElementById("tolerance").value;
+            input = validateInput(input);
+
+            if (input.length === 0) {
+                document.getElementById("result").innerHTML = "⚠️ Enter at least one digit.";
+                resetResistor();
+                return;
+            }
+
+            let colors = [];
+            let resistanceValue = 0;
+
+            if (resistorType === 4 && input.length >= 2) {
+                resistanceValue = (parseInt(input[0]) * 10) + parseInt(input[1]);
+                let multiplierIndex = Math.min(parseInt(input.slice(2)) || 0, 9);
+                resistanceValue *= multiplierMap[multiplierIndex];
+
+                colors = [
+                    colorMap[parseInt(input[0])],
+                    colorMap[parseInt(input[1])],
+                    colorMap[multiplierIndex],
+                    tolerance
+                ];
+            } else if (resistorType === 5 && input.length >= 3) {
+                resistanceValue = (parseInt(input[0]) * 100) + (parseInt(input[1]) * 10) + parseInt(input[2]);
+                let multiplierIndex = Math.min(parseInt(input.slice(3)) || 0, 9);
+                resistanceValue *= multiplierMap[multiplierIndex];
+
+                colors = [
+                    colorMap[parseInt(input[0])],
+                    colorMap[parseInt(input[1])],
+                    colorMap[parseInt(input[2])],
+                    colorMap[multiplierIndex],
+                    tolerance
+                ];
+            }
+
+            let toleranceValue = toleranceMap[tolerance];
+            let minResistance = resistanceValue * (1 - (toleranceValue / 100));
+            let maxResistance = resistanceValue * (1 + (toleranceValue / 100));
+
+            function formatResistance(value) {
+                if (value >= 1000000) return (value / 1000000) + " MΩ";
+                if (value >= 1000) return (value / 1000) + " kΩ";
+                return value + " Ω";
+            }
+
+            let formattedResistance = formatResistance(resistanceValue);
+            let formattedMin = formatResistance(minResistance);
+            let formattedMax = formatResistance(maxResistance);
+
+            updateResistorBands(colors);
+            document.getElementById("result").innerHTML = 
+                <p><strong>Resistance:</strong> ${formattedResistance}</p>
+                <p><strong>Min:</strong> ${formattedMin} | <strong>Max:</strong> ${formattedMax}</p>
+                <p><strong>Tolerance:</strong> ±${toleranceValue}%</p>
+            ;
+        }
+
+        function updateResistorBands(colors) {
+            const bands = ["band1", "band2", "band3", "band4"];
+            colors.forEach((color, index) => {
+                document.getElementById(bands[index]).style.backgroundColor = color.toLowerCase();
+            });
+        }
+
+        function resetResistor() {
+            const bands = ["band1", "band2", "band3", "band4"];
+            bands.forEach((band) => {
+                document.getElementById(band).style.backgroundColor = "#ccc"; // Default grey color
+            });
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+
+        function saveResult() {
+            const resultText = document.getElementById("result").innerHTML;
+            const textToSave = resultText.replace(/<\/?[^>]+(>|$)/g, ""); // Remove HTML tags
+
+            const blob = new Blob([textToSave], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "resistor_result.txt";
+            link.click();
+        }
+
+        function downloadImage() {
+            html2canvas(document.querySelector("#resistor")).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL("image/png");
+                link.download = 'resistor_image.png';
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
+
+   
+
+
+
+
+
+
+
+
+
